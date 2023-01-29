@@ -93,6 +93,10 @@ Model modelLampPost2;
 // Model animate instance
 // Mayow
 Model mayowModelAnimate;
+
+//Personaje 1
+Model personaje1;
+
 // Terrain model instance
 Terrain terrain(-1, -1, 200, 8, "../Textures/heightmap.png");
 
@@ -126,6 +130,7 @@ glm::mat4 modelMatrixLambo = glm::mat4(1.0);
 glm::mat4 modelMatrixAircraft = glm::mat4(1.0);
 glm::mat4 modelMatrixDart = glm::mat4(1.0f);
 glm::mat4 modelMatrixMayow = glm::mat4(1.0f);
+glm::mat4 modelMatrixPersonaje1 = glm::mat4(1.0f);
 
 int animationIndex = 1;
 float rotDartHead = 0.0, rotDartLeftArm = 0.0, rotDartLeftHand = 0.0, rotDartRightArm = 0.0, rotDartRightHand = 0.0, rotDartLeftLeg = 0.0, rotDartRightLeg = 0.0;
@@ -320,6 +325,10 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	//Mayow
 	mayowModelAnimate.loadModel("../models/mayow/personaje2.fbx");
 	mayowModelAnimate.setShader(&shaderMulLighting);
+
+	//Personaje 1
+	personaje1.loadModel("../models/modelo1/model1.dae");
+	personaje1.setShader(&shaderMulLighting);
 
 	camera->setPosition(glm::vec3(0.0, 0.0, 10.0));
 	camera->setDistanceFromTarget(distanceFromTarget);
@@ -720,6 +729,8 @@ void destroy() {
 	modelLamp2.destroy();
 	modelLampPost2.destroy();
 
+	personaje1.destroy();
+
 	// Custom objects animate
 	mayowModelAnimate.destroy();
 
@@ -928,6 +939,9 @@ void applicationLoop() {
 	modelMatrixMayow = glm::translate(modelMatrixMayow, glm::vec3(13.0f, 0.05f, -5.0f));
 	modelMatrixMayow = glm::rotate(modelMatrixMayow, glm::radians(-90.0f), glm::vec3(0, 1, 0));
 
+
+	modelMatrixPersonaje1 = glm::translate(modelMatrixPersonaje1, glm::vec3(17.0f, 0.65f, -5.0f));
+
 	// Variables to interpolation key frames
 	fileName = "../animaciones/animation_dart_joints.txt";
 	keyFramesDartJoints = getKeyRotFrames(fileName);
@@ -1012,7 +1026,7 @@ void applicationLoop() {
 		 * Propiedades Luz direccional Terrain
 		 *******************************************/
 		shaderTerrain.setVectorFloat3("viewPos", glm::value_ptr(camera->getPosition()));
-		shaderTerrain.setVectorFloat3("directionalLight.light.ambient", glm::value_ptr(glm::vec3(0.05, 0.05, 0.05)));
+		shaderTerrain.setVectorFloat3("directionalLight.light.ambient", glm::value_ptr(glm::vec3(0.5, 0.5, 0.5)));
 		shaderTerrain.setVectorFloat3("directionalLight.light.diffuse", glm::value_ptr(glm::vec3(0.3, 0.3, 0.3)));
 		shaderTerrain.setVectorFloat3("directionalLight.light.specular", glm::value_ptr(glm::vec3(0.4, 0.4, 0.4)));
 		shaderTerrain.setVectorFloat3("directionalLight.direction", glm::value_ptr(glm::vec3(-1.0, 0.0, 0.0)));
@@ -1249,6 +1263,13 @@ void applicationLoop() {
 		modelMatrixMayowBody = glm::scale(modelMatrixMayowBody, glm::vec3(0.021, 0.021, 0.021));
 		mayowModelAnimate.setAnimationIndex(animationIndex);
 		mayowModelAnimate.render(modelMatrixMayowBody);
+		/***************************************
+		*    Render personaje 1
+		****************************************/
+		glm::mat4 modelMatrixPersonaje1Body = glm::mat4(modelMatrixPersonaje1);
+		modelMatrixPersonaje1Body = glm::scale(modelMatrixPersonaje1Body, glm::vec3(0.015, 0.015, 0.015));
+		personaje1.render(modelMatrixPersonaje1Body);
+		//modelMatrixPersonaje1Body = 
 
 		/*******************************************
 		 * Skybox
@@ -1296,6 +1317,34 @@ void applicationLoop() {
 		aircraftCollider.c = glm::vec3(modelMatrixColliderAircraft[3]);
 		aircraftCollider.e = modelAircraft.getObb().e * glm::vec3(1.0, 1.0, 1.0);
 		addOrUpdateColliders(collidersOBB, "aircraft", aircraftCollider, modelMatrixAircraft);
+
+		//collider Mayow
+		AbstractModel::OBB mayowCollider;
+		glm::mat4 modelMatrixColliderMayow = glm::mat4(modelMatrixMayow);
+		modelMatrixColliderMayow = glm::rotate(modelMatrixColliderMayow, glm::radians(-90.0f), glm::vec3(1.0, 0.0, 0.0));
+		mayowCollider.u = glm::quat_cast(modelMatrixColliderMayow);
+		modelMatrixColliderMayow = glm::scale(modelMatrixColliderMayow, glm::vec3(0.021f));
+		modelMatrixColliderMayow = glm::translate(modelMatrixColliderMayow, mayowModelAnimate.getObb().c);
+		mayowCollider.c = glm::vec3(modelMatrixColliderMayow[3]);
+		mayowCollider.e = mayowModelAnimate.getObb().e * 0.021f * 0.75f;
+		addOrUpdateColliders(collidersOBB, "mayow", mayowCollider, modelMatrixMayow);
+
+
+		//collider Personaje1
+		AbstractModel::OBB personaje1Collider;
+		glm::mat4 modelMatrixColliderPersonaje1 = glm::mat4(modelMatrixPersonaje1);
+		modelMatrixColliderPersonaje1 = glm::rotate(modelMatrixColliderPersonaje1, glm::radians(-90.0f), glm::vec3(1.0, 0.0, 0.0));
+		personaje1Collider.u = glm::quat_cast(modelMatrixColliderPersonaje1);
+		modelMatrixColliderPersonaje1 = glm::scale(modelMatrixColliderPersonaje1, glm::vec3(0.021f));
+		modelMatrixColliderPersonaje1 = glm::translate(modelMatrixColliderPersonaje1, personaje1.getObb().c);
+		personaje1Collider.c = glm::vec3(modelMatrixColliderPersonaje1[3]);
+		personaje1Collider.e = personaje1.getObb().e * 0.021f * 0.75f;
+		addOrUpdateColliders(collidersOBB, "Personaje1", personaje1Collider, modelMatrixPersonaje1);
+
+
+
+
+
 
 		// Lamps1 colliders
 		for (int i = 0; i < lamp1Position.size(); i++){
