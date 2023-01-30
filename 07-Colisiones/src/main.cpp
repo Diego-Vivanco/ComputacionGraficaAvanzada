@@ -97,6 +97,9 @@ Model mayowModelAnimate;
 //Personaje 1
 Model personaje1;
 
+//Personaje 2
+Model modelDoc;
+
 // Terrain model instance
 Terrain terrain(-1, -1, 200, 8, "../Textures/heightmap.png");
 
@@ -131,6 +134,7 @@ glm::mat4 modelMatrixAircraft = glm::mat4(1.0);
 glm::mat4 modelMatrixDart = glm::mat4(1.0f);
 glm::mat4 modelMatrixMayow = glm::mat4(1.0f);
 glm::mat4 modelMatrixPersonaje1 = glm::mat4(1.0f);
+glm::mat4 modelMatrixDoc = glm::mat4(1.0f);
 
 int animationIndex = 1;
 float rotDartHead = 0.0, rotDartLeftArm = 0.0, rotDartLeftHand = 0.0, rotDartRightArm = 0.0, rotDartRightHand = 0.0, rotDartLeftLeg = 0.0, rotDartRightLeg = 0.0;
@@ -207,15 +211,15 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 
 	if (bFullScreen)
 		window = glfwCreateWindow(width, height, strTitle.c_str(),
-				glfwGetPrimaryMonitor(), nullptr);
+			glfwGetPrimaryMonitor(), nullptr);
 	else
 		window = glfwCreateWindow(width, height, strTitle.c_str(), nullptr,
-				nullptr);
+			nullptr);
 
 	if (window == nullptr) {
 		std::cerr
-				<< "Error to create GLFW window, you can try download the last version of your video card that support OpenGL 3.3+"
-				<< std::endl;
+			<< "Error to create GLFW window, you can try download the last version of your video card that support OpenGL 3.3+"
+			<< std::endl;
 		destroy();
 		exit(-1);
 	}
@@ -329,6 +333,10 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	//Personaje 1
 	personaje1.loadModel("../models/modelo1/model1.dae");
 	personaje1.setShader(&shaderMulLighting);
+
+	//Personaje 2 (Doc)
+	modelDoc.loadModel("../models/Doc/doc_walk.dae");
+	modelDoc.setShader(&shaderMulLighting);
 
 	camera->setPosition(glm::vec3(0.0, 0.0, 10.0));
 	camera->setDistanceFromTarget(distanceFromTarget);
@@ -730,6 +738,7 @@ void destroy() {
 	modelLampPost2.destroy();
 
 	personaje1.destroy();
+	modelDoc.destroy();
 
 	// Custom objects animate
 	mayowModelAnimate.destroy();
@@ -926,6 +935,7 @@ void applicationLoop() {
 	glm::vec3 target;
 	float angleTarget;
 
+	//Traslaciones para l
 	matrixModelRock = glm::translate(matrixModelRock, glm::vec3(-3.0, 0.0, 2.0));
 
 	modelMatrixHeli = glm::translate(modelMatrixHeli, glm::vec3(5.0, 10.0, -5.0));
@@ -942,6 +952,8 @@ void applicationLoop() {
 
 	modelMatrixPersonaje1 = glm::translate(modelMatrixPersonaje1, glm::vec3(17.0f, 0.65f, -5.0f));
 
+	modelMatrixDoc = glm::translate(modelMatrixDoc, glm::vec3(7.0f, 0.5, -5.0f));
+
 	// Variables to interpolation key frames
 	fileName = "../animaciones/animation_dart_joints.txt";
 	keyFramesDartJoints = getKeyRotFrames(fileName);
@@ -951,7 +963,7 @@ void applicationLoop() {
 
 	while (psi) {
 		currTime = TimeManager::Instance().GetTime();
-		if(currTime - lastTime < 0.016666667){
+		if (currTime - lastTime < 0.016666667) {
 			glfwPollEvents();
 			continue;
 		}
@@ -969,24 +981,24 @@ void applicationLoop() {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		glm::mat4 projection = glm::perspective(glm::radians(45.0f),
-				(float) screenWidth / (float) screenHeight, 0.01f, 100.0f);
+			(float)screenWidth / (float)screenHeight, 0.01f, 100.0f);
 
-		if(modelSelected == 1){
+		if (modelSelected == 1) {
 			axis = glm::axis(glm::quat_cast(modelMatrixDart));
 			angleTarget = glm::angle(glm::quat_cast(modelMatrixDart));
 			target = modelMatrixDart[3];
 		}
-		else{
+		else {
 			axis = glm::axis(glm::quat_cast(modelMatrixMayow));
 			angleTarget = glm::angle(glm::quat_cast(modelMatrixMayow));
 			target = modelMatrixMayow[3];
 		}
 
-		if(std::isnan(angleTarget))
+		if (std::isnan(angleTarget))
 			angleTarget = 0.0;
-		if(axis.y < 0)
+		if (axis.y < 0)
 			angleTarget = -angleTarget;
-		if(modelSelected == 1)
+		if (modelSelected == 1)
 			angleTarget -= glm::radians(90.0f);
 		camera->setCameraTarget(target);
 		camera->setAngleTarget(angleTarget);
@@ -999,19 +1011,19 @@ void applicationLoop() {
 
 		// Settea la matriz de vista y projection al shader con skybox
 		shaderSkybox.setMatrix4("projection", 1, false,
-				glm::value_ptr(projection));
+			glm::value_ptr(projection));
 		shaderSkybox.setMatrix4("view", 1, false,
-				glm::value_ptr(glm::mat4(glm::mat3(view))));
+			glm::value_ptr(glm::mat4(glm::mat3(view))));
 		// Settea la matriz de vista y projection al shader con multiples luces
 		shaderMulLighting.setMatrix4("projection", 1, false,
-					glm::value_ptr(projection));
+			glm::value_ptr(projection));
 		shaderMulLighting.setMatrix4("view", 1, false,
-				glm::value_ptr(view));
+			glm::value_ptr(view));
 		// Settea la matriz de vista y projection al shader con multiples luces
 		shaderTerrain.setMatrix4("projection", 1, false,
-					glm::value_ptr(projection));
+			glm::value_ptr(projection));
 		shaderTerrain.setMatrix4("view", 1, false,
-				glm::value_ptr(view));
+			glm::value_ptr(view));
 
 		/*******************************************
 		 * Propiedades Luz direccional
@@ -1063,7 +1075,7 @@ void applicationLoop() {
 		 *******************************************/
 		shaderMulLighting.setInt("pointLightCount", lamp1Position.size() + lamp2Orientation.size());
 		shaderTerrain.setInt("pointLightCount", lamp1Position.size() + lamp2Orientation.size());
-		for (int i = 0; i < lamp1Position.size(); i++){
+		for (int i = 0; i < lamp1Position.size(); i++) {
 			glm::mat4 matrixAdjustLamp = glm::mat4(1.0f);
 			matrixAdjustLamp = glm::translate(matrixAdjustLamp, lamp1Position[i]);
 			matrixAdjustLamp = glm::rotate(matrixAdjustLamp, glm::radians(lamp1Orientation[i]), glm::vec3(0, 1, 0));
@@ -1085,7 +1097,7 @@ void applicationLoop() {
 			shaderTerrain.setFloat("pointLights[" + std::to_string(i) + "].linear", 0.09);
 			shaderTerrain.setFloat("pointLights[" + std::to_string(i) + "].quadratic", 0.02);
 		}
-		for (int i = 0; i < lamp2Position.size(); i++){
+		for (int i = 0; i < lamp2Position.size(); i++) {
 			glm::mat4 matrixAdjustLamp = glm::mat4(1.0f);
 			matrixAdjustLamp = glm::translate(matrixAdjustLamp, lamp2Position[i]);
 			matrixAdjustLamp = glm::rotate(matrixAdjustLamp, glm::radians(lamp2Orientation[i]), glm::vec3(0, 1, 0));
@@ -1142,7 +1154,7 @@ void applicationLoop() {
 		/*******************************************
 		 * Custom objects obj
 		 *******************************************/
-		//Rock render
+		 //Rock render
 		matrixModelRock[3][1] = terrain.getHeightTerrain(matrixModelRock[3][0], matrixModelRock[3][2]);
 		modelRock.render(matrixModelRock);
 		// Forze to enable the unit texture to 0 always ----------------- IMPORTANT
@@ -1183,7 +1195,7 @@ void applicationLoop() {
 		glEnable(GL_CULL_FACE);
 
 		// Render the lamps
-		for (int i = 0; i < lamp1Position.size(); i++){
+		for (int i = 0; i < lamp1Position.size(); i++) {
 			lamp1Position[i].y = terrain.getHeightTerrain(lamp1Position[i].x, lamp1Position[i].z);
 			modelLamp1.setPosition(lamp1Position[i]);
 			modelLamp1.setScale(glm::vec3(0.5, 0.5, 0.5));
@@ -1191,7 +1203,7 @@ void applicationLoop() {
 			modelLamp1.render();
 		}
 
-		for (int i = 0; i < lamp2Position.size(); i++){
+		for (int i = 0; i < lamp2Position.size(); i++) {
 			lamp2Position[i].y = terrain.getHeightTerrain(lamp2Position[i].x, lamp2Position[i].z);
 			modelLamp2.setPosition(lamp2Position[i]);
 			modelLamp2.setScale(glm::vec3(1.0, 1.0, 1.0));
@@ -1263,13 +1275,22 @@ void applicationLoop() {
 		modelMatrixMayowBody = glm::scale(modelMatrixMayowBody, glm::vec3(0.021, 0.021, 0.021));
 		mayowModelAnimate.setAnimationIndex(animationIndex);
 		mayowModelAnimate.render(modelMatrixMayowBody);
+
 		/***************************************
 		*    Render personaje 1
 		****************************************/
 		glm::mat4 modelMatrixPersonaje1Body = glm::mat4(modelMatrixPersonaje1);
-		modelMatrixPersonaje1Body = glm::scale(modelMatrixPersonaje1Body, glm::vec3(0.015, 0.015, 0.015));
+		modelMatrixPersonaje1Body = glm::scale(modelMatrixPersonaje1Body, glm::vec3(0.015));
 		personaje1.render(modelMatrixPersonaje1Body);
-		//modelMatrixPersonaje1Body = 
+	
+
+
+		/***************************************
+		*            Render Doc
+		****************************************/
+		glm::mat4 modelMatrixDocBody = glm::mat4(modelMatrixDoc);
+		modelMatrixDocBody = glm::scale(modelMatrixDocBody, glm::vec3(0.35));
+		modelDoc.render(modelMatrixDocBody);
 
 		/*******************************************
 		 * Skybox
@@ -1335,14 +1356,24 @@ void applicationLoop() {
 		glm::mat4 modelMatrixColliderPersonaje1 = glm::mat4(modelMatrixPersonaje1);
 		modelMatrixColliderPersonaje1 = glm::rotate(modelMatrixColliderPersonaje1, glm::radians(-90.0f), glm::vec3(1.0, 0.0, 0.0));
 		personaje1Collider.u = glm::quat_cast(modelMatrixColliderPersonaje1);
-		modelMatrixColliderPersonaje1 = glm::scale(modelMatrixColliderPersonaje1, glm::vec3(0.021f));
-		modelMatrixColliderPersonaje1 = glm::translate(modelMatrixColliderPersonaje1, personaje1.getObb().c);
+		modelMatrixColliderPersonaje1 = glm::scale(modelMatrixColliderPersonaje1, glm::vec3(0.002f, 0.0015, 0.32f));
+		modelMatrixColliderPersonaje1 = glm::translate(modelMatrixColliderPersonaje1, glm::vec3(personaje1.getObb().c.x, personaje1.getObb().c.y, personaje1.getObb().c.z + 0.09));
+		//Para escalar el tamaño de la caja de colision                        altura
+		personaje1Collider.e = personaje1.getObb().e * glm::vec3(0.007, 0.007, 0.08); //* 0.01f * 1.0f;
 		personaje1Collider.c = glm::vec3(modelMatrixColliderPersonaje1[3]);
-		personaje1Collider.e = personaje1.getObb().e * 0.021f * 0.75f;
 		addOrUpdateColliders(collidersOBB, "Personaje1", personaje1Collider, modelMatrixPersonaje1);
 
 
-
+		//Collider de Finn
+		//AbstractModel::OBB FinnCollider;
+		//glm::mat4 modelMatrixColliderFinn = glm::mat4(modelMatrixFinn);
+		//modelMatrixColliderFinn = glm::rotate(modelMatrixColliderFinn, glm::radians(-90.0f), glm::vec3(1, 0, 0));
+		//FinnCollider.u = glm::quat_cast(modelMatrixColliderFinn);
+		//modelMatrixColliderFinn = glm::scale(modelMatrixColliderFinn, glm::vec3(0.2f));
+		//modelMatrixColliderFinn = glm::translate(modelMatrixColliderFinn, glm::vec3(finnModelAnimate.getObb().c.x, finnModelAnimate.getObb().c.y, finnModelAnimate.getObb().c.z));
+		//FinnCollider.e = finnModelAnimate.getObb().e * glm::vec3(0.2f)/* *glm::vec3(0.787401574f)*/;
+		//FinnCollider.c = glm::vec3(modelMatrixColliderFinn[3]);
+		//addOrUpdateColliders(collidersOBB, "Finn", FinnCollider, modelMatrixFinn);
 
 
 
@@ -1361,6 +1392,30 @@ void applicationLoop() {
 			lampCollider.e = modelLamp1.getObb().e * glm::vec3(0.5, 0.5, 0.5);
 			addOrUpdateColliders(collidersOBB, "lamp1-" + std::to_string(i), lampCollider, modelMatrixColliderLamp);
 		}
+
+
+
+
+		//collider de la roca  (Esfera)
+		glm::mat4 modelMatrixColliderRock = glm::mat4(matrixModelRock);
+		AbstractModel::SBB rockCollider;
+		modelMatrixColliderRock = glm::scale(modelMatrixColliderRock, glm::vec3(1.0, 1.0, 1.0));
+		modelMatrixColliderRock = glm::translate(modelMatrixColliderRock, modelRock.getSbb().c);
+		rockCollider.c = glm::vec3(modelMatrixColliderRock[3]);
+		rockCollider.ratio = modelRock.getSbb().ratio * 1.0;
+		addOrUpdateColliders(collidersSBB, "rock", rockCollider, matrixModelRock);
+
+		//Collider del Doc
+		glm::mat4 modelMatrixColliderDoc = glm::mat4(modelMatrixDoc);
+		AbstractModel::SBB ColliderDoc;
+		modelMatrixColliderDoc = glm::scale(modelMatrixColliderDoc, glm::vec3(0.3, 0.3, 0.3));
+		modelMatrixColliderDoc = glm::translate(modelMatrixColliderDoc, modelDoc.getSbb().c);
+		ColliderDoc.c = glm::vec3(modelMatrixColliderDoc[3]);
+		ColliderDoc.ratio = modelDoc.getSbb().ratio * 0.3;
+		addOrUpdateColliders(collidersSBB, "Doc", ColliderDoc, modelMatrixDoc);
+
+
+
 
 		/*******************************************
 		 * Render de colliders
